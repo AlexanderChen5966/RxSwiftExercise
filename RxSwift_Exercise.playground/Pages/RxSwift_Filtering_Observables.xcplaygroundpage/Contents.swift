@@ -8,7 +8,8 @@ let disposeBag = DisposeBag()
 Observable.of(2,30,22,5,60,3,40,9)
     .filter {
     $0 > 10
-    }.subscribe(onNext:{ debugPrint($0) })
+    }
+    .subscribe(onNext:{ debugPrint($0) })
     .disposed(by: disposeBag)
 
 

@@ -17,12 +17,9 @@
         <page name='RxSwift_Debug_Implement_Operators'/>
         <page name='RxSwift_Traits'/>
         <page name='Untitled Page'/>
-        <page name='RxSwift_CallAPi'/>
         <page name='URLRequest_Example'/>
-        <page name='UIView Animation'/>
         <page name='URLRequest_Example1'/>
         <page name='JsonParser'/>
         <page name='JsonParserByThirdParty'/>
-        <page name='Swift_Combine'/>
     </pages>
 </playground>

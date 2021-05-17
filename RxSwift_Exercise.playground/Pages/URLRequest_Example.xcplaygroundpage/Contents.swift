@@ -31,7 +31,7 @@ let getHeaders = ["header1":"value1","header2":"value2"]
 let postJSON = ["para1":"value1","para2":"value2"]
 let postURLencoded = "para1=value1&para2%5Bvalue21%5D=value22"
 let postFormData = ["para1":"value1"]
-
+//傳統URLSession
 //MARK:Http Get
 
 

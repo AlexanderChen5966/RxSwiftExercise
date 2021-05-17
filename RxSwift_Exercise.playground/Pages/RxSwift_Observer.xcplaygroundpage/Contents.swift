@@ -17,13 +17,9 @@ observable.subscribe(
     debugPrint("completed")
 })
 
+
 let windowView = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 600))
 windowView.backgroundColor = .white
-
-
-//bind
-let disposeBag = DisposeBag()
-let bindObservable = Observable<Int>.interval(RxTimeInterval.seconds(1), scheduler: MainScheduler.instance)
 
 let label = UILabel(frame: CGRect(x: 0, y: 0, width: 200, height: 22))
 label.text = "測試資料"
@@ -31,6 +27,9 @@ label.textAlignment = .center
 label.center = windowView.center
 
 
+//.bind
+let disposeBag = DisposeBag()
+let bindObservable = Observable<Int>.interval(RxTimeInterval.seconds(1), scheduler: MainScheduler.instance)
 
 bindObservable.map{
     "目前的Index:\($0)"
@@ -41,17 +40,23 @@ bindObservable.map{
 }
 .disposed(by: disposeBag)
 
-//PlaygroundPage.current.liveView = label
-
-windowView.addSubview(label)
+//windowView.addSubview(label)
 PlaygroundPage.current.liveView = windowView
 
 //AnyObserver：可以用來描述任意一種觀察者
-//
-let anyObserver: AnyObserver<String> = AnyObserver {
+//使用.bind方法綁定事件
+//1 生成一個Label
+let binderLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 200, height: 22))
+binderLabel.text = "隱藏Label"
+binderLabel.textAlignment = .center
+binderLabel.center = windowView.center
+
+//2 建立一個觀察者，並指定binderLabel是否隱藏
+let anyObserver: AnyObserver<Bool> = AnyObserver {
     event in
     switch event {
     case .next(let data):
+        binderLabel.isHidden = data
         debugPrint(data)
     case .error(let error):
         debugPrint(error)
@@ -61,59 +66,24 @@ let anyObserver: AnyObserver<String> = AnyObserver {
     }
 }
 
-let anyObservable = Observable.of("A", "B", "C")
-anyObservable.subscribe(anyObserver)
+//3 建立Obervable放入true，並使用.bind綁定anyObserver1
+let binderStatusObservable:Observable<Bool> = Observable.just(false)//true false交互使用
+binderStatusObservable.bind(to: anyObserver)
 
 
-//Binder
+//使用Binder綁定事件
 /*
  有兩個特性
  - 不會處理錯誤事件
  - 確保Binder都是在給定的Scheduler上執行(預設為 MainScheduler)
  */
 
-//1 生成一個Label
-let binderLabel = UILabel(frame: CGRect(x: 0, y: 0, width: 200, height: 22))
-
-//2 建立一個觀察者
-let observer1: AnyObserver<Bool> = AnyObserver { (event) in
-    switch event {
-    case .next(let isHidden):
-        binderLabel.isHidden = isHidden
-    default:
-        break
-    }
-}
-//let usernameValid:Observable<Bool> = Observable.create { event in
-//    observer.onNext(true)
-//    return Disposables.create()
-//}
-
-let binderStatusObserver:Observable<Bool> = Observable.just(true)
-
-binderStatusObserver.bind(to: observer1)
-//
-
-//let observer = binderLabel.rx.text
-//let text: Observable<String?> = Observable.just("")
-//text.bind(to: observer)
-let observer2: Binder<Bool> = Binder(binderLabel) {
-    (view,text) in
-    
+let binderObserver: Binder<Bool> = Binder(binderLabel) {
+    (view,value) in
+    view.isHidden = value
 }
 
-let binderObserver:Binder<String> = Binder(binderLabel) {
-    (view, text) in
-    view.text = text
-}
+binderStatusObservable.bind(to: binderObserver).disposed(by: disposeBag)
 
-//let binderObservable = Observable<Int>.interval(RxTimeInterval.seconds(1), scheduler: MainScheduler.instance)
-//binderObservable.map{
-//    "目前的Index1:\($0)"
-//}
-//.bind(to: binderObserver)
-//.disposed(by: disposeBag)
-//
-//
-//PlaygroundPage.current.liveView = binderLabel
-
+windowView.addSubview(binderLabel)
+PlaygroundPage.current.liveView = windowView

@@ -9,39 +9,39 @@ import RxCocoa
 let disposeBag = DisposeBag()
 let publishSubject = PublishSubject<String>()
 
-//publishSubject.buffer(timeSpan: RxTimeInterval.seconds(1), count: 3, scheduler: MainScheduler.instance)
-//    .subscribe(onNext: {
-//        debugPrint($0)
-//    })
-//    .disposed(by: disposeBag)
-//publishSubject.onNext("a")
-//publishSubject.onNext("b")
-//publishSubject.onNext("c")
-//
-//publishSubject.onNext("1")
-//publishSubject.onNext("2")
-//publishSubject.onNext("3")
+publishSubject.buffer(timeSpan: RxTimeInterval.seconds(1), count: 3, scheduler: MainScheduler.instance)
+    .subscribe(onNext: {
+        debugPrint($0)
+    })
+    .disposed(by: disposeBag)
+publishSubject.onNext("a")
+publishSubject.onNext("b")
+publishSubject.onNext("c")
+
+publishSubject.onNext("1")
+publishSubject.onNext("2")
+publishSubject.onNext("3")
 
 
 //2.window
 let windowSubject = PublishSubject<String>()
 
-//windowSubject.window(timeSpan: RxTimeInterval.seconds(1), count: 3, scheduler: MainScheduler.instance).subscribe(onNext:{
-//    debugPrint("subscribe: \($0)")
-//    $0.asObservable().subscribe(onNext:{
-//        debugPrint($0)
-//    }).disposed(by: disposeBag)
-//})
-//.disposed(by: disposeBag)
-//
-//
-//windowSubject.onNext("a")
-//windowSubject.onNext("b")
-//windowSubject.onNext("c")
-//
-//windowSubject.onNext("1")
-//windowSubject.onNext("2")
-//windowSubject.onNext("3")
+windowSubject.window(timeSpan: RxTimeInterval.seconds(1), count: 3, scheduler: MainScheduler.instance).subscribe(onNext:{
+    debugPrint("subscribe: \($0)")
+    $0.asObservable().subscribe(onNext:{
+        debugPrint($0)
+    }).disposed(by: disposeBag)
+})
+.disposed(by: disposeBag)
+
+
+windowSubject.onNext("a")
+windowSubject.onNext("b")
+windowSubject.onNext("c")
+
+windowSubject.onNext("1")
+windowSubject.onNext("2")
+windowSubject.onNext("3")
 
 
 //3.map

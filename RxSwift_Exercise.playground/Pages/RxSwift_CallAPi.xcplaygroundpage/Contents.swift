@@ -5,6 +5,8 @@ import UIKit
 import Foundation
 import SnapKit
 
+//MARK:使用RxSwift製作URLRequest
+
 public struct WebAPIModelElement: Codable {
     public let userId:Int?
     public let id:Int

@@ -151,12 +151,6 @@ behaviorRelay
     .subscribe(onNext: { debugPrint($0) })
     .disposed(by: disposeBag)
 
-//let variable = Variable(subject9)
-//
-//variable.asObservable()
-//    .switchLatest()
-//    .subscribe(onNext: { debugPrint($0) })
-//    .disposed(by: disposeBag)
     
 subject9.onNext("B")
 subject9.onNext("C")
@@ -169,7 +163,6 @@ subject9.onNext("D")
 subject10.onNext("2")
 
 //改變事件源
-//variable.value = subject9
 behaviorRelay.accept(subject9)
 
 subject10.onNext("3")

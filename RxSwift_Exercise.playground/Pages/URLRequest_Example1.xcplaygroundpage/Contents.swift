@@ -24,7 +24,7 @@ struct Post: Codable {
 let url = URL(string: "https://jsonplaceholder.typicode.com/posts")!
 var request = URLRequest(url: url)
 
-//The traditional way
+//The traditional way：URLSession
 func fetchedDataByDataTask(from request: URLRequest){
     URLSession.shared.dataTask(with: request) { data, response, error in
         if let error = error {
