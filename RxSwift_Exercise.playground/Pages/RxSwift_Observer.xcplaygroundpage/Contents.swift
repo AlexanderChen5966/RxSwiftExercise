@@ -29,16 +29,16 @@ label.center = windowView.center
 
 //.bind
 let disposeBag = DisposeBag()
-let bindObservable = Observable<Int>.interval(RxTimeInterval.seconds(1), scheduler: MainScheduler.instance)
-
-bindObservable.map{
-    "目前的Index:\($0)"
-}
-.bind{
-     (text) in
-    label.text = text
-}
-.disposed(by: disposeBag)
+//let bindObservable = Observable<Int>.interval(RxTimeInterval.seconds(1), scheduler: MainScheduler.instance)
+//
+//bindObservable.map{
+//    "目前的Index:\($0)"
+//}
+//.bind{
+//     (text) in
+//    label.text = text
+//}
+//.disposed(by: disposeBag)
 
 //windowView.addSubview(label)
 PlaygroundPage.current.liveView = windowView
@@ -66,7 +66,7 @@ let anyObserver: AnyObserver<Bool> = AnyObserver {
     }
 }
 
-//3 建立Obervable放入true，並使用.bind綁定anyObserver1
+//3 建立Obervable放入true，並使用.bind綁定anyObserver
 let binderStatusObservable:Observable<Bool> = Observable.just(false)//true false交互使用
 binderStatusObservable.bind(to: anyObserver)
 
