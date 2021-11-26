@@ -27,13 +27,12 @@ public struct WebAPIModelElement: Codable {
 
 
 let url = URL(string: "https://jsonplaceholder.typicode.com/posts")!
-//let url = URL(string: "https://httpstat.us/404")!
 var request = URLRequest(url: url)
 
-enum HTTPError: Error {
-    case statusCode
-    case post
-}
+//http status code 404 使用
+let errorUrl = URL(string: "https://httpstat.us/404")!
+var errorRequest = URLRequest(url: errorUrl)
+
 
 /*:
  ### 為了比較未使用RxSwift，與使用RxSwift的差異所以兩種方式都會寫
@@ -143,11 +142,6 @@ sessionTask4.subscribe(onNext: {
 //let urlString = "https://jsonplaceholder.typicode.com/posts"
 //let urlString = "https://jsonplaceholder.typicode.com/users/1"
 
-//let url = URL(string: urlString)!
-//var request = URLRequest(url: url)
-
-
-
 /*:
  ###
  會使用RXSwift發出請求後，接著再繼續將得到的回應轉換成JSON
@@ -212,11 +206,6 @@ URLSession.shared.rx.data(request: request).subscribe(onNext:{
 }.disposed(by: disposeBag)
 
 
-
-private var jsonDecoder = JSONDecoder()
-private var urlSession: URLSession
-
-urlSession = URLSession(configuration: URLSessionConfiguration.default)
 
 /*
  上面都是在說明搭配RxSwift的發出Http請求與需要JSON解析的基本用法
@@ -307,7 +296,7 @@ func fetchCallAPI1<T: Decodable>(request: URLRequest) -> Observable<T> {
 fetchCallAPI1(request: request).subscribe(
 onNext: {
     (data :[WebAPIModelElement]) in
-    debugPrint("fetchCallAPI1 Json Data:\(data)")
+//    debugPrint("fetchCallAPI1 Json Data:\(data)")
 //    PlaygroundPage.current.finishExecution()
 }, onError: {
     error in
@@ -382,7 +371,7 @@ public func fetchCallAPI2<T: Decodable>(request: URLRequest)
     return Observable.create { observer in
         
         //MARK: 建立一個URLSession dataTask
-        let task = urlSession.dataTask(with: request) { (data, response, error) in
+        let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
             
             if let httpResponse = response as? HTTPURLResponse{
                 let statusCode = httpResponse.statusCode
@@ -391,7 +380,7 @@ public func fetchCallAPI2<T: Decodable>(request: URLRequest)
                     let _data = data ?? Data()
                     //如果HTTP statusCode是正常的就進行Json的解析
                     if (200...399).contains(statusCode) {
-                        let objs = try jsonDecoder.decode(T.self, from: _data)
+                        let objs = try JSONDecoder().decode(T.self, from: _data)
                         //MARK: observer onNext event
                         observer.onNext(objs)
                     }
@@ -421,7 +410,7 @@ let postObservable:Observable<[WebAPIModelElement]> = fetchCallAPI2(request: req
 
 postObservable.subscribe { (model) in
     print("----------PostModel----------")
-    print("PostModel:",model)
+//    print("PostModel:",model)
 
 } onError: { (error) in
     print("error:",error)
@@ -449,3 +438,151 @@ productObservable.subscribe { (model) in
 }.disposed(by: disposeBag)
 
 // ----fetchCallAPI2
+
+
+/*:
+ ### 以下是使用rx.response、rx.data、rx.json的方式，個別實作呼叫API的方法
+ ###至於要使用哪種形式，就交由開發的狀況來選擇
+ */
+
+// ----fetchCallAPI3
+//使用rx.response
+func fetchCallAPI3<T>(request: URLRequest) -> Observable<T> {
+
+    return Observable.create { observer in
+        URLSession.shared.rx.response(request: request).subscribe { response, data in
+            if 200 ..< 300 ~= response.statusCode {
+                let apiData = data as! T
+                //進入onNext觀察者
+                observer.onNext(apiData)
+                
+            }else {
+                //進入onError觀察者
+                observer.onError(NSError(domain: "非正常狀態碼", code: response.statusCode, userInfo: nil))
+            }
+            
+        } onError: { error in
+            print("onError",error)
+
+            observer.onError(error)
+        }
+
+    }
+}
+
+//由於一樣是使用泛型當回傳值，同樣會用兩種方式進行轉型
+let rxResponseObservable:Observable<Data> = fetchCallAPI3(request: request)
+rxResponseObservable.subscribe(onNext: {
+    data in
+    let str = String(data: data, encoding: String.Encoding.utf8)
+    print("rx.response請求成功，回傳資料為：\(String(describing: str))")
+
+}, onError: {
+    error in
+    print("rx.response請求失敗，回傳資料為：\(error)")
+
+}).disposed(by: disposeBag)
+
+//這裡使用ststus code 404網址來證實，確實會進入OnError觀察者
+fetchCallAPI3(request: errorRequest).subscribe(onNext: {
+    (data: Data) in
+    let str = String(data: data, encoding: String.Encoding.utf8)
+    print("rx.response請求成功，回傳資料為：\(String(describing: str))")
+}, onError: {
+    error in
+    print("rx.response請求失敗，回傳資料為：\(error)")
+
+}).disposed(by: disposeBag)
+
+// ----fetchCallAPI3
+
+// ----fetchCallAPI4
+//使用rx.data
+func fetchCallAPI4<T>(request: URLRequest) -> Observable<T> {
+    
+    return Observable.create { observer in
+        URLSession.shared.rx.data(request: request).subscribe(onNext: {data in
+            guard let data = data as? T else {
+                print("Error: missing data")
+                observer.onError(NSError(domain: "missing data", code: -1, userInfo: nil))
+                return
+            }
+            observer.onNext(data)
+        }, onError: {
+            error in
+            observer.onError(error)
+        })
+    }
+}
+
+let rxDataObservable:Observable<Data> = fetchCallAPI4(request: request)
+rxDataObservable.subscribe(onNext: {
+    data in
+    let str = String(data: data, encoding: String.Encoding.utf8)
+    print("rx.data請求成功，回傳資料為：\(String(describing: str))")
+    
+}, onError: {
+    error in
+    print("rx.data請求失敗，回傳資料為：\(error)")
+    
+}).disposed(by: disposeBag)
+
+
+fetchCallAPI4(request: errorRequest).subscribe(onNext: {
+    (data:Data) in
+    let str = String(data: data, encoding: String.Encoding.utf8)
+    print("rx.data請求成功，回傳資料為：\(str)")
+
+}, onError: {
+    error in
+    print("rx.data請求失敗，回傳資料為：\(error)")
+
+}).disposed(by: disposeBag)
+
+// ----fetchCallAPI4
+
+// ----fetchCallAPI5
+//使用rx.json
+func fetchCallAPI5<T>(request: URLRequest) -> Observable<T> {
+
+    return Observable.create { observer in
+        URLSession.shared.rx.json(request: request).subscribe(onNext: {
+            jsonData in
+            let json = jsonData as! T
+            debugPrint("rx.json請求成功，回傳資料為：\(json)")
+            observer.onNext(json)
+
+        }, onError: {
+            error in
+            observer.onError(error)
+
+        })
+    }
+}
+
+//這裡的JSON解析可以用[Dictionary<String,Any>] 或是等效的[[String: Any]]的型別
+//當然這裡的ststus code 404就不實作，有興趣的可以自己玩玩看
+let rxJsonObservable:Observable<[Dictionary<String,Any>]> = fetchCallAPI5(request: request)
+rxJsonObservable.subscribe(onNext: {
+    jsonData in
+    print("rx.json請求成功，回傳資料為：\(jsonData)")
+
+}, onError: {
+    error in
+    print("rx.json請求失敗，回傳資料為：\(error)")
+
+}).disposed(by: disposeBag)
+
+
+
+fetchCallAPI5(request: request).subscribe(onNext: {
+    (data:[[String: Any]]) in
+
+    print("rx.json請求成功，回傳資料為：\(data)")
+    
+}, onError: {
+    error in
+    print("rx.json請求失敗，回傳資料為：\(error)")
+    
+}).disposed(by: disposeBag)
+// ----fetchCallAPI5
